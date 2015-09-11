@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,9 @@ import static com.alibaba.druid.sql.parser.Token.RPAREN;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author wenshao<szujobs@hotmail.com>
@@ -56,6 +58,8 @@ public class Lexer {
     protected Keywords     keywods      = Keywords.DEFAULT_KEYWORDS;
 
     protected String       stringVal;
+    
+    protected List<String> comments = new ArrayList<String>(2);
 
     protected boolean      skipComment  = true;
 
@@ -64,16 +68,35 @@ public class Lexer {
     /*
      * anti sql injection
      */
-    private boolean        allowComment = true;
+    private boolean          allowComment = true;
 
-    private int            varIndex     = -1;
+    private int              varIndex     = -1;
 
     protected CommentHandler commentHandler;
+
+    protected boolean        endOfComment = false;
     
-    protected boolean        hasComment = false;
+    protected boolean        keepComments = false;
+    
+    protected int            line         = 0;
+    
+    protected int            lines        = 0;
 
     public Lexer(String input){
+        this(input, null);
+    }
+    
+    public Lexer(String input, CommentHandler commentHandler){
         this(input, true);
+        this.commentHandler = commentHandler;
+    }
+    
+    public boolean isKeepComments() {
+        return keepComments;
+    }
+    
+    public void setKeepComments(boolean keepComments) {
+        this.keepComments = keepComments;
     }
 
     public CommentHandler getCommentHandler() {
@@ -268,9 +291,21 @@ public class Lexer {
 
     public final void nextToken() {
         bufPos = 0;
+        if (comments != null) {
+            comments = null;
+        }
 
+        this.lines = 0;
+        int startLine = line;
+        
         for (;;) {
             if (isWhitespace(ch)) {
+                if (ch == '\n') {
+                    line++;
+                    
+                    lines = line - startLine;
+                }
+                
                 scanChar();
                 continue;
             }
@@ -371,7 +406,7 @@ public class Lexer {
                     return;
                 case '.':
                     scanChar();
-                    if (isDigit(ch)) {
+                    if (isDigit(ch) && !isFirstIdentifierChar(charAt(pos - 2))) {
                         unscan();
                         scanNumber();
                         return;
@@ -496,7 +531,15 @@ public class Lexer {
                 scanChar();
                 if (ch == '|') {
                     scanChar();
-                    token = Token.BARBAR;
+                    if (ch == '/') {
+                        scanChar();
+                        token = Token.BARBARSLASH; 
+                    } else {
+                        token = Token.BARBAR;
+                    }
+                } else if (ch == '/') {
+                    scanChar();
+                    token = Token.BARSLASH;
                 } else {
                     token = Token.BAR;
                 }
@@ -561,6 +604,9 @@ public class Lexer {
                 } else if (ch == '<') {
                     scanChar();
                     token = Token.BANGLT;
+                } else if (ch == '!') {
+                    scanChar();
+                    token = Token.BANGBANG; // postsql
                 } else {
                     token = Token.BANG;
                 }
@@ -632,6 +678,7 @@ public class Lexer {
             buf = new char[32];
         }
 
+        boolean hasSpecial = false;
         for (;;) {
             if (isEOF()) {
                 lexError("unclosed.str.lit");
@@ -639,21 +686,36 @@ public class Lexer {
             }
 
             ch = charAt(++pos);
-
-            if (ch == '\"') {
+            
+            if (ch == '\"' && charAt(pos - 1) != '\\') {
                 scanChar();
                 token = LITERAL_ALIAS;
                 break;
             }
-
+            
+            if(ch == '\\') {
+                scanChar();
+                if (ch == '"') {
+                    hasSpecial = true;
+                } else {
+                    unscan();
+                }
+            }
+            
             if (bufPos == buf.length) {
                 putChar(ch);
             } else {
                 buf[bufPos++] = ch;
             }
         }
+        
+        if (!hasSpecial) {
+            stringVal = subString(mark + 1, bufPos);
+        } else {
+            stringVal = new String(buf, 0, bufPos);
+        }
 
-        stringVal = subString(mark + 1, bufPos);
+        //stringVal = subString(mark + 1, bufPos);
     }
     
     public void scanSharp() {
@@ -723,65 +785,100 @@ public class Lexer {
             throw new NotAllowCommentException();
         }
 
-        if (ch != '/') {
+        if ((ch == '/' && charAt(pos + 1) == '/')
+                || (ch == '-' && charAt(pos + 1) == '-')) {
+            scanSingleLineComment();
+        } else if (ch == '/' && charAt(pos + 1) == '*') {
+            scanMultiLineComment();
+        } else {
             throw new IllegalStateException();
         }
+    }
 
+    private void scanMultiLineComment() {
+        Token lastToken = this.token;
+        
+        scanChar();
+        scanChar();
         mark = pos;
         bufPos = 0;
-        scanChar();
 
-        if (ch == '*') {
+        for (;;) {
+            if (ch == '*' && charAt(pos + 1) == '/') {
+                scanChar();
+                scanChar();
+                break;
+            }
+            
+			// multiline comment结束符错误
+			if (ch == EOI) {
+				throw new ParserException("unterminated /* comment.");
+			}
             scanChar();
             bufPos++;
-
-            for (;;) {
-                if (ch == '*' && charAt(pos + 1) == '/') {
-                    bufPos += 2;
-                    scanChar();
-                    scanChar();
-                    break;
-                }
-
-                scanChar();
-                bufPos++;
-            }
-
-            stringVal = subString(mark, bufPos);
-            token = Token.MULTI_LINE_COMMENT;
-            hasComment = true;
-            return;
         }
 
-        if (ch == '/') {
-            scanChar();
-            bufPos++;
+        stringVal = subString(mark, bufPos);
+        token = Token.MULTI_LINE_COMMENT;
+        if (keepComments) {
+            addComment(stringVal);
+        }
+        
+        if (commentHandler != null && commentHandler.handle(lastToken, stringVal)) {
+            return;
+        }
+        
+        if (!isAllowComment() && !isSafeComment(stringVal)) {
+            throw new NotAllowCommentException();
+        }
+    }
 
-            for (;;) {
-                if (ch == '\r') {
-                    if (charAt(pos + 1) == '\n') {
-                        bufPos += 2;
-                        scanChar();
-                        break;
-                    }
-                    bufPos++;
-                    break;
-                }
+    private void scanSingleLineComment() {
+        Token lastToken = this.token;
+        
+        scanChar();
+        scanChar();
+        mark = pos - 1;
+        bufPos = 0;
 
-                if (ch == '\n') {
+        for (;;) {
+            if (ch == '\r') {
+                if (charAt(pos + 1) == '\n') {
+                    line++;
                     scanChar();
-                    bufPos++;
                     break;
                 }
-
-                scanChar();
                 bufPos++;
+                break;
             }
 
-            stringVal = subString(mark + 1, bufPos);
-            token = Token.LINE_COMMENT;
-            hasComment = true;
+            if (ch == '\n') {
+                line++;
+                scanChar();
+                break;
+            }
+            
+			// single line comment结束符错误
+			if (ch == EOI) {
+				throw new ParserException("syntax error at end of input.");
+			}
+
+            scanChar();
+            bufPos++;
+        }
+
+        stringVal = subString(mark, bufPos);
+        token = Token.LINE_COMMENT;
+        if (keepComments) {
+            addComment(stringVal);
+        }
+        
+        if (commentHandler != null && commentHandler.handle(lastToken, stringVal)) {
             return;
+        }
+        
+        if (!isAllowComment() && !isSafeComment(stringVal)) {
+            throw new NotAllowCommentException();
         }
     }
 
@@ -938,6 +1035,14 @@ public class Lexer {
     public final String stringVal() {
         return stringVal;
     }
+    
+    public final List<String> readAndResetComments() {
+        List<String> comments = this.comments;
+        
+        this.comments = null;
+        
+        return comments;
+    }
 
     private boolean isOperator(char ch) {
         switch (ch) {
@@ -1046,16 +1151,57 @@ public class Lexer {
     }
 
     public static interface CommentHandler {
-
         boolean handle(Token lastToken, String comment);
     }
 
-    public boolean isHasComment() {
-        return hasComment;
+    public boolean hasComment() {
+        return comments != null;
     }
     
     public void skipToEOF() {
         pos = text.length();
         this.token = Token.EOF;
+    }
+
+    public boolean isEndOfComment() {
+        return endOfComment;
+    }
+    
+    protected boolean isSafeComment(String comment) {
+        if (comment == null) {
+            return true;
+        }
+        comment = comment.toLowerCase();
+        if (comment.indexOf("select") != -1 //
+            || comment.indexOf("delete") != -1 //
+            || comment.indexOf("insert") != -1 //
+            || comment.indexOf("update") != -1 //
+            || comment.indexOf("into") != -1 //
+            || comment.indexOf("where") != -1 //
+            || comment.indexOf("or") != -1 //
+            || comment.indexOf("and") != -1 //
+            || comment.indexOf("union") != -1 //
+            || comment.indexOf('\'') != -1 //
+            || comment.indexOf('=') != -1 //
+            || comment.indexOf('>') != -1 //
+            || comment.indexOf('<') != -1 //
+            || comment.indexOf('&') != -1 //
+            || comment.indexOf('|') != -1 //
+            || comment.indexOf('^') != -1 //
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    protected void addComment(String comment) {
+        if (comments == null) {
+            comments = new ArrayList<String>(2);
+        }
+        comments.add(stringVal);
+    }
+    
+    public int getLine() {
+        return line;
     }
 }

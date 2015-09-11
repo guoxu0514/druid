@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,12 +55,16 @@ public class PGLexer extends Lexer {
         map.put("ROW", Token.ROW);
         map.put("ROWS", Token.ROWS);
         map.put("SHARE", Token.SHARE);
+        map.put("SHOW", Token.SHOW);
 
         map.put("USING", Token.USING);
         map.put("WINDOW", Token.WINDOW);
         
         map.put("TRUE", Token.TRUE);
         map.put("FALSE", Token.FALSE);
+        map.put("ARRAY", Token.ARRAY);
+        map.put("IF", Token.IF);
+        map.put("TYPE", Token.TYPE);
 
         DEFAULT_PG_KEYWORDS = new Keywords(map);
     }
@@ -90,6 +94,7 @@ public class PGLexer extends Lexer {
                     hasSpecial = true;
                 }
 
+                putChar('\\');
                 switch (ch) {
                     case '\0':
                         putChar('\0');
@@ -135,6 +140,7 @@ public class PGLexer extends Lexer {
                     arraycopy(mark + 1, buf, 0, bufPos);
                     hasSpecial = true;
                     putChar('\'');
+                    putChar('\'');
                     continue;
                 }
             }
@@ -156,5 +162,10 @@ public class PGLexer extends Lexer {
         } else {
             stringVal = new String(buf, 0, bufPos);
         }
+    }
+    
+    public void scanSharp() {
+        token = Token.POUND;
+        scanChar();
     }
 }

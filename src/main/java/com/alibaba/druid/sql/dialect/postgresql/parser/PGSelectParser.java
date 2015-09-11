@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,11 +22,14 @@ import com.alibaba.druid.sql.ast.SQLSetQuantifier;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQuery;
+import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import com.alibaba.druid.sql.dialect.postgresql.ast.expr.PGParameter;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGFunctionTableSource;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock.IntoOption;
+import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock.PGLimit;
+import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGValuesQuery;
 import com.alibaba.druid.sql.parser.ParserException;
 import com.alibaba.druid.sql.parser.SQLExprParser;
 import com.alibaba.druid.sql.parser.SQLSelectParser;
@@ -48,6 +51,27 @@ public class PGSelectParser extends SQLSelectParser {
 
     @Override
     public SQLSelectQuery query() {
+        if (lexer.token() == Token.VALUES) {
+            lexer.nextToken();
+            accept(Token.LPAREN);
+            PGValuesQuery valuesQuery = new PGValuesQuery();
+            this.exprParser.exprList(valuesQuery.getValues(), valuesQuery);
+            accept(Token.RPAREN);
+            return queryRest(valuesQuery);
+        }
+        
+        if (lexer.token() == Token.LPAREN) {
+            lexer.nextToken();
+
+            SQLSelectQuery select = query();
+			if (select instanceof SQLSelectQueryBlock) {
+				((SQLSelectQueryBlock) select).setParenthesized(true);
+			}
+            accept(Token.RPAREN);
+
+            return queryRest(select);
+        }
+        
         PGSelectQueryBlock queryBlock = new PGSelectQueryBlock();
 
         if (lexer.token() == Token.SELECT) {
@@ -135,18 +159,26 @@ public class PGSelectParser extends SQLSelectParser {
 
         for (;;) {
             if (lexer.token() == Token.LIMIT) {
+                PGLimit limit = new PGLimit();
+                
                 lexer.nextToken();
                 if (lexer.token() == Token.ALL) {
-                    queryBlock.setLimit(new SQLIdentifierExpr("ALL"));
+                    limit.setRowCount(new SQLIdentifierExpr("ALL"));
                     lexer.nextToken();
                 } else {
-                    SQLExpr limit = expr();
+                    limit.setRowCount(expr());
+                }
+                
+                queryBlock.setLimit(limit);
+            } else if (lexer.token() == Token.OFFSET) {
+                PGLimit limit = queryBlock.getLimit();
+                if (limit == null) {
+                    limit = new PGLimit();
                     queryBlock.setLimit(limit);
                 }
-            } else if (lexer.token() == Token.OFFSET) {
                 lexer.nextToken();
                 SQLExpr offset = expr();
-                queryBlock.setOffset(offset);
+                limit.setOffset(offset);
 
                 if (lexer.token() == Token.ROW || lexer.token() == Token.ROWS) {
                     lexer.nextToken();
@@ -227,11 +259,10 @@ public class PGSelectParser extends SQLSelectParser {
 
     protected SQLTableSource parseTableSourceRest(SQLTableSource tableSource) {
         if (lexer.token() == Token.AS && tableSource instanceof SQLExprTableSource) {
-            String alias = this.as();
-
             if (lexer.token() == Token.LPAREN) {
                 SQLExprTableSource exprTableSource = (SQLExprTableSource) tableSource;
 
+                String alias = this.as();
                 PGFunctionTableSource functionTableSource = new PGFunctionTableSource(exprTableSource.getExpr());
                 functionTableSource.setAlias(alias);
 

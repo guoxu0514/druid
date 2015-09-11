@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -113,8 +113,12 @@ public class SQLJoinTableSource extends SQLTableSourceImpl {
         CROSS_JOIN("CROSS JOIN"), //
         NATURAL_JOIN("NATURAL JOIN"), //
         NATURAL_INNER_JOIN("NATURAL INNER JOIN"), //
-        LEFT_OUTER_JOIN("LEFT JOIN"), RIGHT_OUTER_JOIN("RIGHT JOIN"), FULL_OUTER_JOIN("FULL JOIN"),
-        STRAIGHT_JOIN("STRAIGHT_JOIN");
+        LEFT_OUTER_JOIN("LEFT JOIN"), //
+        RIGHT_OUTER_JOIN("RIGHT JOIN"), //
+        FULL_OUTER_JOIN("FULL JOIN"),//
+        STRAIGHT_JOIN("STRAIGHT_JOIN"), //
+        OUTER_APPLY("OUTER APPLY"),//
+        CROSS_APPLY("CROSS APPLY");
 
         public final String name;
 

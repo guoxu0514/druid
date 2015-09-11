@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLObjectImpl;
 import com.alibaba.druid.sql.ast.SQLOrderBy;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
+import com.alibaba.druid.sql.dialect.postgresql.ast.PGSQLObject;
 import com.alibaba.druid.sql.dialect.postgresql.ast.PGSQLObjectImpl;
 import com.alibaba.druid.sql.dialect.postgresql.ast.PGWithClause;
 import com.alibaba.druid.sql.dialect.postgresql.visitor.PGASTVisitor;
@@ -30,8 +32,7 @@ public class PGSelectQueryBlock extends SQLSelectQueryBlock {
 
     private PGWithClause  with;
     private List<SQLExpr> distinctOn = new ArrayList<SQLExpr>(2);
-    private SQLExpr       limit;
-    private SQLExpr       offset;
+    private PGLimit       limit;
     private WindowClause  window;
 
     private SQLOrderBy    orderBy;
@@ -68,7 +69,6 @@ public class PGSelectQueryBlock extends SQLSelectQueryBlock {
             acceptChild(visitor, this.window);
             acceptChild(visitor, this.orderBy);
             acceptChild(visitor, this.limit);
-            acceptChild(visitor, this.offset);
             acceptChild(visitor, this.fetch);
             acceptChild(visitor, this.forClause);
         }
@@ -107,11 +107,11 @@ public class PGSelectQueryBlock extends SQLSelectQueryBlock {
         this.with = with;
     }
 
-    public SQLExpr getLimit() {
+    public PGLimit getLimit() {
         return limit;
     }
 
-    public void setLimit(SQLExpr limit) {
+    public void setLimit(PGLimit limit) {
         this.limit = limit;
     }
 
@@ -124,11 +124,18 @@ public class PGSelectQueryBlock extends SQLSelectQueryBlock {
     }
 
     public SQLExpr getOffset() {
-        return offset;
+        if (limit != null) {
+            return limit.offset;
+        }
+        return null;
     }
 
     public void setOffset(SQLExpr offset) {
-        this.offset = offset;
+        if (limit == null) {
+            limit = new PGLimit();
+            limit.setParent(this);
+        }
+        limit.setOffset(offset);
     }
 
     public List<SQLExpr> getDistinctOn() {
@@ -246,6 +253,53 @@ public class PGSelectQueryBlock extends SQLSelectQueryBlock {
             }
             visitor.endVisit(this);
         }
+    }
+
+    public static class PGLimit extends SQLObjectImpl implements SQLExpr, PGSQLObject {
+
+        public PGLimit(){
+
+        }
+
+        private SQLExpr rowCount;
+        private SQLExpr offset;
+
+        public SQLExpr getRowCount() {
+            return rowCount;
+        }
+
+        public void setRowCount(SQLExpr rowCount) {
+            if (rowCount != null) {
+                rowCount.setParent(this);
+            }
+            this.rowCount = rowCount;
+        }
+
+        public SQLExpr getOffset() {
+            return offset;
+        }
+
+        public void setOffset(SQLExpr offset) {
+            if (offset != null) {
+                offset.setParent(this);
+            }
+            this.offset = offset;
+        }
+        
+        @Override
+        protected void accept0(SQLASTVisitor visitor) {
+            accept0((PGASTVisitor) visitor);
+        }
+
+        @Override
+        public void accept0(PGASTVisitor visitor) {
+            if (visitor.visit(this)) {
+                acceptChild(visitor, offset);
+                acceptChild(visitor, rowCount);
+            }
+            visitor.endVisit(this);
+        }
+
     }
 
 }

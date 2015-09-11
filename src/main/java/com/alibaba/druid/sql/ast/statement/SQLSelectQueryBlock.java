@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLObjectImpl;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 
-public class SQLSelectQueryBlock extends SQLSelectQuery {
+public class SQLSelectQueryBlock extends SQLObjectImpl implements SQLSelectQuery {
 
     protected int                       distionOption;
     protected final List<SQLSelectItem> selectList = new ArrayList<SQLSelectItem>();
@@ -30,6 +31,7 @@ public class SQLSelectQueryBlock extends SQLSelectQuery {
     protected SQLExprTableSource        into;
     protected SQLExpr                   where;
     protected SQLSelectGroupByClause    groupBy;
+    protected boolean parenthesized = false;
 
     public SQLSelectQueryBlock(){
 
@@ -80,6 +82,11 @@ public class SQLSelectQueryBlock extends SQLSelectQuery {
     public List<SQLSelectItem> getSelectList() {
         return this.selectList;
     }
+    
+    public void addSelectItem(SQLSelectItem item) {
+        this.selectList.add(item);
+        item.setParent(this);
+    }
 
     public SQLTableSource getFrom() {
         return this.from;
@@ -89,7 +96,15 @@ public class SQLSelectQueryBlock extends SQLSelectQuery {
         this.from = from;
     }
 
-    @Override
+    public boolean isParenthesized() {
+		return parenthesized;
+	}
+
+	public void setParenthesized(boolean parenthesized) {
+		this.parenthesized = parenthesized;
+	}
+
+	@Override
     protected void accept0(SQLASTVisitor visitor) {
         if (visitor.visit(this)) {
             acceptChild(visitor, this.selectList);
@@ -104,6 +119,7 @@ public class SQLSelectQueryBlock extends SQLSelectQuery {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + (Boolean.valueOf(parenthesized).hashCode());
         result = prime * result + distionOption;
         result = prime * result + ((from == null) ? 0 : from.hashCode());
         result = prime * result + ((groupBy == null) ? 0 : groupBy.hashCode());
@@ -119,6 +135,7 @@ public class SQLSelectQueryBlock extends SQLSelectQuery {
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
         SQLSelectQueryBlock other = (SQLSelectQueryBlock) obj;
+        if (parenthesized ^ other.parenthesized) return false;
         if (distionOption != other.distionOption) return false;
         if (from == null) {
             if (other.from != null) return false;

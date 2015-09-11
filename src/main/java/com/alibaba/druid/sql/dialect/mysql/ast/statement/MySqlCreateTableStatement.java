@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,9 @@ import com.alibaba.druid.sql.ast.statement.SQLSelect;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlObjectImpl;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
+import com.alibaba.druid.util.JdbcConstants;
 
 public class MySqlCreateTableStatement extends SQLCreateTableStatement implements MySqlStatement {
-
-    private boolean                ifNotExiists = false;
 
     private Map<String, SQLObject> tableOptions = new LinkedHashMap<String, SQLObject>();
 
@@ -49,7 +48,7 @@ public class MySqlCreateTableStatement extends SQLCreateTableStatement implement
     private SQLExprTableSource     like;
 
     public MySqlCreateTableStatement(){
-
+        super (JdbcConstants.MYSQL);
     }
 
     public SQLExprTableSource getLike() {
@@ -97,14 +96,6 @@ public class MySqlCreateTableStatement extends SQLCreateTableStatement implement
 
     public void setQuery(SQLSelect query) {
         this.query = query;
-    }
-
-    public boolean isIfNotExiists() {
-        return ifNotExiists;
-    }
-
-    public void setIfNotExiists(boolean ifNotExiists) {
-        this.ifNotExiists = ifNotExiists;
     }
 
     @Override

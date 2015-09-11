@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import junit.framework.TestCase;
 public class TestMySqlPing extends TestCase {
 
     public void test_ping() throws Exception {
-        String url = "jdbc:mysql://10.20.147.142:3308/dragoon_v25_masterdb";
+        String url = "jdbc:mysql://a.b.c.d:3308/dragoon_v25_masterdb";
         String user = "dragoon_admin";
         String password = "dragoon_root";
 

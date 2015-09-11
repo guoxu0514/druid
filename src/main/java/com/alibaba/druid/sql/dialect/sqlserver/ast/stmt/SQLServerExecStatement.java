@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,10 @@ import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerASTVisitor;
 
 public class SQLServerExecStatement extends SQLServerObjectImpl implements SQLServerStatement {
 
+    private SQLName       returnStatus;
     private SQLName       moduleName;
     private List<SQLExpr> parameters = new ArrayList<SQLExpr>();
+    private String        dbType;
 
     public SQLName getModuleName() {
         return moduleName;
@@ -43,9 +45,26 @@ public class SQLServerExecStatement extends SQLServerObjectImpl implements SQLSe
 
     public void accept0(SQLServerASTVisitor visitor) {
         if (visitor.visit(this)) {
+            acceptChild(visitor, this.returnStatus);
             acceptChild(visitor, this.moduleName);
             acceptChild(visitor, this.parameters);
         }
         visitor.endVisit(this);
+    }
+
+    public SQLName getReturnStatus() {
+        return returnStatus;
+    }
+
+    public void setReturnStatus(SQLName returnStatus) {
+        this.returnStatus = returnStatus;
+    }
+    
+    public String getDbType() {
+        return dbType;
+    }
+    
+    public void setDbType(String dbType) {
+        this.dbType = dbType;
     }
 }

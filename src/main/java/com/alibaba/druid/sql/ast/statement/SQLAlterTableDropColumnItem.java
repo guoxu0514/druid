@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ public class SQLAlterTableDropColumnItem extends SQLObjectImpl implements SQLAlt
 
     private List<SQLName> columns = new ArrayList<SQLName>();
 
+    private boolean       cascade = false;
+
     public SQLAlterTableDropColumnItem(){
 
     }
@@ -40,6 +42,14 @@ public class SQLAlterTableDropColumnItem extends SQLObjectImpl implements SQLAlt
 
     public List<SQLName> getColumns() {
         return columns;
+    }
+
+    public boolean isCascade() {
+        return cascade;
+    }
+
+    public void setCascade(boolean cascade) {
+        this.cascade = cascade;
     }
 
 }

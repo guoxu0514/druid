@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock.L
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitor;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlOutputVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
+import com.alibaba.druid.util.JdbcConstants;
 
 public class MySqlDeleteStatement extends SQLDeleteStatement {
 
@@ -33,6 +34,10 @@ public class MySqlDeleteStatement extends SQLDeleteStatement {
     private SQLTableSource using;
     private SQLOrderBy     orderBy;
     private Limit          limit;
+    
+    public MySqlDeleteStatement() {
+        super (JdbcConstants.MYSQL);
+    }
 
     public boolean isLowPriority() {
         return lowPriority;

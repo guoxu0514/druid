@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.alibaba.druid.sql.ast.SQLObject;
 import com.alibaba.druid.sql.ast.SQLSetQuantifier;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.SQLAllColumnExpr;
+import com.alibaba.druid.sql.ast.expr.SQLCharExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLLiteralExpr;
 import com.alibaba.druid.sql.ast.expr.SQLMethodInvokeExpr;
@@ -88,7 +89,6 @@ import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleOuterExpr;
 import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleRangeExpr;
 import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleSizeExpr;
 import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleSysdateExpr;
-import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleTimestampExpr;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterIndexStatement;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterIndexStatement.Rebuild;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterProcedureStatement;
@@ -98,7 +98,6 @@ import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableAddConstain
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableDropPartition;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableModify;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableMoveTablespace;
-import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableRenameTo;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableSplitPartition;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableSplitPartition.NestedTablePartitionSpec;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleAlterTableSplitPartition.TableSpaceItem;
@@ -297,9 +296,11 @@ public class OracleOutputVisitor extends SQLASTOutputVisitor implements OracleAS
 
         if (x.getWhere() != null) {
             println();
+            incrementIndent();
             print("WHERE ");
             x.getWhere().setParent(x);
             x.getWhere().accept(this);
+            decrementIndent();
         }
 
         if (x.getReturning() != null) {
@@ -740,21 +741,6 @@ public class OracleOutputVisitor extends SQLASTOutputVisitor implements OracleAS
         return false;
     }
 
-    public boolean visit(OracleTimestampExpr x) {
-        print("TIMESTAMP '");
-
-        print(x.getLiteral());
-        print('\'');
-
-        if (x.getTimeZone() != null) {
-            print(" AT TIME ZONE '");
-            print(x.getTimeZone());
-            print('\'');
-        }
-
-        return false;
-    }
-
     public boolean visit(OracleUpdateStatement x) {
         print("UPDATE ");
         
@@ -786,8 +772,10 @@ public class OracleOutputVisitor extends SQLASTOutputVisitor implements OracleAS
         if (x.getWhere() != null) {
             println();
             print("WHERE ");
+            incrementIndent();
             x.getWhere().setParent(x);
             x.getWhere().accept(this);
+            decrementIndent();
         }
 
         if (x.getReturning().size() > 0) {
@@ -906,10 +894,6 @@ public class OracleOutputVisitor extends SQLASTOutputVisitor implements OracleAS
 
     }
 
-    @Override
-    public void endVisit(OracleTimestampExpr x) {
-
-    }
 
     @Override
     public void endVisit(OracleUpdateStatement x) {
@@ -2509,18 +2493,6 @@ public class OracleOutputVisitor extends SQLASTOutputVisitor implements OracleAS
     }
 
     @Override
-    public boolean visit(OracleAlterTableRenameTo x) {
-        print("RENAME TO ");
-        x.getTo().accept(this);
-        return false;
-    }
-
-    @Override
-    public void endVisit(OracleAlterTableRenameTo x) {
-
-    }
-
-    @Override
     public boolean visit(OracleStorageClause x) {
         print("STORAGE (");
 
@@ -3436,5 +3408,15 @@ public class OracleOutputVisitor extends SQLASTOutputVisitor implements OracleAS
         }
 
         return super.visit(x);
+    }
+    
+    public boolean visit(SQLCharExpr x) {
+        if (x.getText() != null && x.getText().length() == 0) {
+            print("NULL");
+        } else {
+            super.visit(x);
+        }
+
+        return false;
     }
 }

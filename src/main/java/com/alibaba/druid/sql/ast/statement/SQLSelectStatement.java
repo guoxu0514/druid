@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,16 @@ public class SQLSelectStatement extends SQLStatementImpl {
 
     }
 
+    public SQLSelectStatement(String dbType){
+        super (dbType);
+    }
+
     public SQLSelectStatement(SQLSelect select){
+        this.setSelect(select);
+    }
+
+    public SQLSelectStatement(SQLSelect select, String dbType){
+        this(dbType);
         this.setSelect(select);
     }
 

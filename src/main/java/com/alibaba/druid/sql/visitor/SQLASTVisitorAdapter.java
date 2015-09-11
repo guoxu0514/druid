@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,9 @@ import com.alibaba.druid.sql.ast.expr.SQLAggregateExpr;
 import com.alibaba.druid.sql.ast.expr.SQLAllColumnExpr;
 import com.alibaba.druid.sql.ast.expr.SQLAllExpr;
 import com.alibaba.druid.sql.ast.expr.SQLAnyExpr;
+import com.alibaba.druid.sql.ast.expr.SQLArrayExpr;
 import com.alibaba.druid.sql.ast.expr.SQLBetweenExpr;
+import com.alibaba.druid.sql.ast.expr.SQLBinaryExpr;
 import com.alibaba.druid.sql.ast.expr.SQLBinaryOpExpr;
 import com.alibaba.druid.sql.ast.expr.SQLBooleanExpr;
 import com.alibaba.druid.sql.ast.expr.SQLCaseExpr;
@@ -48,24 +50,35 @@ import com.alibaba.druid.sql.ast.expr.SQLNumberExpr;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.ast.expr.SQLQueryExpr;
 import com.alibaba.druid.sql.ast.expr.SQLSomeExpr;
+import com.alibaba.druid.sql.ast.expr.SQLTimestampExpr;
 import com.alibaba.druid.sql.ast.expr.SQLUnaryExpr;
 import com.alibaba.druid.sql.ast.expr.SQLVariantRefExpr;
 import com.alibaba.druid.sql.ast.statement.NotNullConstraint;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableAddColumn;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableAddConstraint;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableAddIndex;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableAddPartition;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableAlterColumn;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableDisableConstraint;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableDisableKeys;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableDisableLifecycle;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableDropColumnItem;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableDropConstraint;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableDropForeignKey;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableDropIndex;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableDropPartition;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableDropPrimaryKey;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableEnableConstraint;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableEnableKeys;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableEnableLifecycle;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableRename;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableRenameColumn;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableRenamePartition;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableSetComment;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableSetLifecycle;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableStatement;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableTouch;
+import com.alibaba.druid.sql.ast.statement.SQLAlterViewRenameStatement;
 import com.alibaba.druid.sql.ast.statement.SQLAssignItem;
 import com.alibaba.druid.sql.ast.statement.SQLCallStatement;
 import com.alibaba.druid.sql.ast.statement.SQLCharacterDataType;
@@ -102,6 +115,7 @@ import com.alibaba.druid.sql.ast.statement.SQLInsertStatement.ValuesClause;
 import com.alibaba.druid.sql.ast.statement.SQLJoinTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLPrimaryKeyImpl;
 import com.alibaba.druid.sql.ast.statement.SQLReleaseSavePointStatement;
+import com.alibaba.druid.sql.ast.statement.SQLRevokeStatement;
 import com.alibaba.druid.sql.ast.statement.SQLRollbackStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSavePointStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSelect;
@@ -111,6 +125,7 @@ import com.alibaba.druid.sql.ast.statement.SQLSelectOrderByItem;
 import com.alibaba.druid.sql.ast.statement.SQLSelectQueryBlock;
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSetStatement;
+import com.alibaba.druid.sql.ast.statement.SQLShowTablesStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSubqueryTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLTruncateStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery;
@@ -386,6 +401,13 @@ public class SQLASTVisitorAdapter implements SQLASTVisitor {
     }
 
     public void endVisit(SQLCreateViewStatement x) {
+    }
+    
+    public boolean visit(SQLCreateViewStatement.Column x) {
+        return true;
+    }
+    
+    public void endVisit(SQLCreateViewStatement.Column x) {
     }
 
     public boolean visit(NotNullConstraint x) {
@@ -1061,6 +1083,156 @@ public class SQLASTVisitorAdapter implements SQLASTVisitor {
 
     @Override
     public boolean visit(SQLUnionQueryTableSource x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLTimestampExpr x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLTimestampExpr x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLRevokeStatement x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLRevokeStatement x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLBinaryExpr x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLBinaryExpr x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterTableRename x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableRename x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterViewRenameStatement x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterViewRenameStatement x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLShowTablesStatement x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLShowTablesStatement x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterTableAddPartition x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableAddPartition x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterTableDropPartition x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableDropPartition x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterTableRenamePartition x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableRenamePartition x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterTableSetComment x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableSetComment x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterTableSetLifecycle x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableSetLifecycle x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterTableEnableLifecycle x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableEnableLifecycle x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterTableDisableLifecycle x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableDisableLifecycle x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLAlterTableTouch x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableTouch x) {
+        return true;
+    }
+    
+    @Override
+    public void endVisit(SQLArrayExpr x) {
+        
+    }
+    
+    @Override
+    public boolean visit(SQLArrayExpr x) {
         return true;
     }
     

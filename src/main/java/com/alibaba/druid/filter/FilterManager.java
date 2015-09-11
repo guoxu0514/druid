@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,9 @@ public class FilterManager {
         Properties filterProperties = new Properties();
 
         loadFilterConfig(filterProperties, ClassLoader.getSystemClassLoader());
+        loadFilterConfig(filterProperties, FilterManager.class.getClassLoader());
         loadFilterConfig(filterProperties, Thread.currentThread().getContextClassLoader());
+        loadFilterConfig(filterProperties, FilterManager.class.getClassLoader());
 
         return filterProperties;
     }

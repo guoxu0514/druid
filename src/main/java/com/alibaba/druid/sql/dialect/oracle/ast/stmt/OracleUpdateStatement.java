@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.alibaba.druid.sql.ast.SQLHint;
 import com.alibaba.druid.sql.ast.statement.SQLUpdateStatement;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleASTVisitor;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
+import com.alibaba.druid.util.JdbcConstants;
 
 public class OracleUpdateStatement extends SQLUpdateStatement implements OracleStatement {
 
@@ -35,7 +36,7 @@ public class OracleUpdateStatement extends SQLUpdateStatement implements OracleS
     private List<SQLExpr>       returningInto = new ArrayList<SQLExpr>();
 
     public OracleUpdateStatement(){
-
+        super (JdbcConstants.ORACLE);
     }
 
     public List<SQLExpr> getReturning() {

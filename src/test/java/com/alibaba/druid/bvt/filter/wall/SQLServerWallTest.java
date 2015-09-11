@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ public class SQLServerWallTest extends TestCase {
     public void test_stuff() throws Exception {
         Assert.assertFalse(WallUtils.isValidateSqlServer("SELECT * from table where version = @@version"));
         Assert.assertFalse(WallUtils.isValidateSqlServer("SELECT 1 — comment"));
-        Assert.assertFalse(WallUtils.isValidateSqlServer("SELECT /*comment*/1"));
+        Assert.assertFalse(WallUtils.isValidateSqlServer("SELECT * from t where a=1 /* and b=1*/"));
         Assert.assertFalse(WallUtils.isValidateSqlServer("WAITFOR DELAY ’0:0:5′ "));
         Assert.assertFalse(WallUtils.isValidateSqlServer("BULK INSERT mydata FROM ‘c:boot.ini’;"));
     }

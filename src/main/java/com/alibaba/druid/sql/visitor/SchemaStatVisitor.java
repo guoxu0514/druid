@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ import com.alibaba.druid.sql.ast.statement.SQLAlterTableDropConstraint;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableDropForeignKey;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableEnableConstraint;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableItem;
+import com.alibaba.druid.sql.ast.statement.SQLAlterTableRename;
 import com.alibaba.druid.sql.ast.statement.SQLAlterTableStatement;
 import com.alibaba.druid.sql.ast.statement.SQLCallStatement;
 import com.alibaba.druid.sql.ast.statement.SQLCheck;
@@ -70,6 +71,8 @@ import com.alibaba.druid.sql.ast.statement.SQLForeignKeyImpl;
 import com.alibaba.druid.sql.ast.statement.SQLGrantStatement;
 import com.alibaba.druid.sql.ast.statement.SQLInsertStatement;
 import com.alibaba.druid.sql.ast.statement.SQLJoinTableSource;
+import com.alibaba.druid.sql.ast.statement.SQLObjectType;
+import com.alibaba.druid.sql.ast.statement.SQLRevokeStatement;
 import com.alibaba.druid.sql.ast.statement.SQLRollbackStatement;
 import com.alibaba.druid.sql.ast.statement.SQLSelect;
 import com.alibaba.druid.sql.ast.statement.SQLSelectGroupByClause;
@@ -83,6 +86,7 @@ import com.alibaba.druid.sql.ast.statement.SQLTableElement;
 import com.alibaba.druid.sql.ast.statement.SQLTruncateStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUpdateStatement;
 import com.alibaba.druid.sql.ast.statement.SQLUseStatement;
+import com.alibaba.druid.sql.ast.statement.SQLWithSubqueryClause;
 import com.alibaba.druid.stat.TableStat;
 import com.alibaba.druid.stat.TableStat.Column;
 import com.alibaba.druid.stat.TableStat.Condition;
@@ -732,6 +736,10 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
 
         if (selectList != null) {
             for (SQLSelectItem item : selectList) {
+                if (!item.getClass().equals(SQLSelectItem.class)) {
+                    continue;
+                }
+                
                 String itemAlias = item.getAlias();
                 SQLExpr itemExpr = item.getExpr();
                 if (itemAlias == null) {
@@ -872,6 +880,32 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
 
     public void endVisit(SQLSelectStatement x) {
     }
+    
+    @Override
+    public boolean visit(SQLWithSubqueryClause.Entry x) {
+        String alias = x.getName().toString();
+        Map<String, String> aliasMap = getAliasMap();
+        SQLWithSubqueryClause with = (SQLWithSubqueryClause) x.getParent();
+
+        if (Boolean.TRUE == with.getRecursive()) {
+            
+            if (aliasMap != null && alias != null) {
+                aliasMap.put(alias, null);
+                subQueryMap.put(alias, x.getSubQuery().getQuery());
+            }
+            
+            x.getSubQuery().accept(this);
+        } else {
+            x.getSubQuery().accept(this);
+            
+            if (aliasMap != null && alias != null) {
+                aliasMap.put(alias, null);
+                subQueryMap.put(alias, x.getSubQuery().getQuery());
+            }
+        }
+        
+        return false;
+    }
 
     public boolean visit(SQLSubqueryTableSource x) {
         x.getSelect().accept(this);
@@ -964,6 +998,7 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
             x.getOrderBy().setParent(x);
         }
 
+        accept(x.getWithSubQuery());
         accept(x.getQuery());
 
         String originalTable = getCurrentTable();
@@ -1076,6 +1111,10 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
         accept(x.getTableElementList());
 
         restoreCurrentTable(x);
+        
+        if (x.getInherits() != null) {
+            x.getInherits().accept(this);
+        }
 
         return false;
     }
@@ -1239,7 +1278,7 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
     @Override
     public boolean visit(SQLForeignKeyImpl x) {
 
-        for (SQLName column : x.getReferencedColumns()) {
+        for (SQLName column : x.getReferencingColumns()) {
             column.accept(this);
         }
 
@@ -1273,6 +1312,17 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
 
     @Override
     public boolean visit(SQLGrantStatement x) {
+        if (x.getOn() != null && (x.getObjectType() == null || x.getObjectType() == SQLObjectType.TABLE)) {
+            x.getOn().accept(this);
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean visit(SQLRevokeStatement x) {
+        if (x.getOn() != null) {
+            x.getOn().accept(this);
+        }
         return false;
     }
     
@@ -1307,6 +1357,11 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
     }
     
     public boolean visit(SQLDropProcedureStatement x) {
+        return false;
+    }
+    
+    @Override
+    public boolean visit(SQLAlterTableRename x) {
         return false;
     }
 }

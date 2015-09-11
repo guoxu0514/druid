@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@ public class MySqlWallTest134 extends TestCase {
 
     public void test_false() throws Exception {
         WallProvider provider = new MySqlWallProvider();
-
+        provider.getConfig().setSelectUnionCheck(true);
         Assert.assertTrue(provider.checkValid("SELECT 1 FROM dual WHERE 1 = '1'''''''''''''UNION SELECT '2';"));
-        Assert.assertFalse(provider.checkValid("SELECT 1 FROM t WHERE 1 = '1'''''''''''''UNION SELECT '2';"));
+        Assert.assertFalse(provider.checkValid("SELECT 1 FROM t WHERE 1 = '1'''''''''''''UNION SELECT '2' --;")); //end of comment --> false
     }
 
 }

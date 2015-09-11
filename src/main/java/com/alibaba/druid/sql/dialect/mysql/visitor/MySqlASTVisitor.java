@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@ import com.alibaba.druid.sql.dialect.mysql.ast.MySqlPrimaryKey;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlUnique;
 import com.alibaba.druid.sql.dialect.mysql.ast.MySqlUseIndexHint;
 import com.alibaba.druid.sql.dialect.mysql.ast.MysqlForeignKey;
-import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlBinaryExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlCharExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlExtractExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlIntervalExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlMatchAgainstExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlOutFileExpr;
+import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlSelectGroupByExpr;
 import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlUserName;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.CobarShowStatus;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlAlterTableAddColumn;
@@ -41,6 +41,7 @@ import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlAlterTableStatemen
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlAlterUserStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlAnalyzeStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlBinlogStatement;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlBlockStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCommitStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateIndexStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlCreateTableStatement;
@@ -71,7 +72,7 @@ import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSetCharSetStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSetNamesStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSetPasswordStatement;
-import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSetTransactionIsolationLevelStatement;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlSetTransactionStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlShowAuthorsStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlShowBinLogEventsStatement;
 import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlShowBinaryLogsStatement;
@@ -158,10 +159,6 @@ public interface MySqlASTVisitor extends SQLASTVisitor {
     void endVisit(MySqlMatchAgainstExpr x);
 
     boolean visit(MySqlMatchAgainstExpr x);
-
-    void endVisit(MySqlBinaryExpr x);
-
-    boolean visit(MySqlBinaryExpr x);
 
     void endVisit(MySqlPrepareStatement x);
 
@@ -275,9 +272,9 @@ public interface MySqlASTVisitor extends SQLASTVisitor {
 
     void endVisit(MySqlUpdateStatement x);
 
-    boolean visit(MySqlSetTransactionIsolationLevelStatement x);
+    boolean visit(MySqlSetTransactionStatement x);
 
-    void endVisit(MySqlSetTransactionIsolationLevelStatement x);
+    void endVisit(MySqlSetTransactionStatement x);
 
     boolean visit(MySqlSetNamesStatement x);
 
@@ -566,4 +563,12 @@ public interface MySqlASTVisitor extends SQLASTVisitor {
     boolean visit(MySqlHintStatement x);
 
     void endVisit(MySqlHintStatement x);
+    
+    boolean visit(MySqlSelectGroupByExpr x);
+
+    void endVisit(MySqlSelectGroupByExpr x);
+    
+    boolean visit(MySqlBlockStatement x);
+
+    void endVisit(MySqlBlockStatement x);
 } //

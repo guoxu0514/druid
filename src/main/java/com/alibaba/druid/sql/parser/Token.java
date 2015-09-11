@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -154,6 +154,7 @@ public enum Token {
     RETURNING("RETURNING"),
     COMMENT("COMMENT"),
     OVER("OVER"),
+    TYPE("TYPE"), 
     
     // oracle
     START("START"),
@@ -177,6 +178,7 @@ public enum Token {
     DECLARE("DECLARE"),
     EXCEPTION("EXCEPTION"),
     GRANT("GRANT"),
+    REVOKE("REVOKE"),
     LOOP("LOOP"),
     GOTO("GOTO"),
     COMMIT("COMMIT"),
@@ -220,6 +222,9 @@ public enum Token {
     // transact-sql
     TOP("TOP"),
     
+    ARRAY("ARRAY"),
+    DISTRIBUTE("DISTRIBUTE"),
+    
     // hive
 
     EOF, 
@@ -261,6 +266,7 @@ public enum Token {
     GT(">"), 
     LT("<"), 
     BANG("!"),
+    BANGBANG("!!"),
     TILDE("~"), 
     QUES("?"), 
     COLON(":"), 
@@ -276,6 +282,8 @@ public enum Token {
     BANGLT("!<"),
     AMPAMP("&&"), 
     BARBAR("||"), 
+    BARBARSLASH("||/"), 
+    BARSLASH("|/"), 
     PLUS("+"), 
     SUB("-"), 
     STAR("*"), 
@@ -286,7 +294,9 @@ public enum Token {
     PERCENT("%"), 
     LTLT("<<"), 
     GTGT(">>"),
-    MONKEYS_AT("@");
+    MONKEYS_AT("@"),
+    POUND("#")
+    ;
 
     public final String name;
 

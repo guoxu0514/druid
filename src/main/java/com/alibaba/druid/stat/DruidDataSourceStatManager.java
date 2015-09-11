@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -131,9 +131,9 @@ public class DruidDataSourceStatManager implements DruidDataSourceStatManagerMBe
 
         synchronized (instances) {
             MBeanServer mbeanServer = ManagementFactory.getPlatformMBeanServer();
+
             if (instances.size() == 0) {
                 try {
-
                     ObjectName objectName = new ObjectName(MBEAN_NAME);
                     if (!mbeanServer.isRegistered(objectName)) {
                         mbeanServer.registerMBean(instance, objectName);
@@ -141,7 +141,7 @@ public class DruidDataSourceStatManager implements DruidDataSourceStatManagerMBe
                 } catch (JMException ex) {
                     LOG.error("register mbean error", ex);
                 }
-                
+
                 DruidStatService.registerMBean();
             }
 
@@ -220,6 +220,23 @@ public class DruidDataSourceStatManager implements DruidDataSourceStatManagerMBe
             for (Object item : dataSources.keySet()) {
                 try {
                     Method method = item.getClass().getMethod("resetStat");
+                    method.invoke(item);
+                } catch (Exception e) {
+                    LOG.error("resetStat error", e);
+                }
+            }
+
+            resetCount.incrementAndGet();
+        }
+    }
+
+    public void logAndResetDataSource() {
+        IdentityHashMap<Object, ObjectName> dataSources = getInstances();
+
+        synchronized (dataSources) {
+            for (Object item : dataSources.keySet()) {
+                try {
+                    Method method = item.getClass().getMethod("logStats");
                     method.invoke(item);
                 } catch (Exception e) {
                     LOG.error("resetStat error", e);

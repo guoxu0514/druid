@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,8 +73,9 @@ public class MySqlWallVisitor extends MySqlASTVisitorAdapter implements WallVisi
 
     private final WallConfig      config;
     private final WallProvider    provider;
-    private final List<Violation> violations  = new ArrayList<Violation>();
-    private boolean               sqlModified = false;
+    private final List<Violation> violations      = new ArrayList<Violation>();
+    private boolean               sqlModified     = false;
+    private boolean               sqlEndOfComment = false;
 
     public MySqlWallVisitor(WallProvider provider){
         this.config = provider.getConfig();
@@ -403,7 +404,7 @@ public class MySqlWallVisitor extends MySqlASTVisitorAdapter implements WallVisi
     @Override
     public boolean visit(SQLCreateTableStatement x) {
         WallVisitorUtils.check(this, x);
-        return true;
+        return false;
     }
 
     @Override
@@ -466,4 +467,15 @@ public class MySqlWallVisitor extends MySqlASTVisitorAdapter implements WallVisi
     public boolean visit(SQLCreateTriggerStatement x) {
         return false;
     }
+
+    @Override
+    public boolean isSqlEndOfComment() {
+        return this.sqlEndOfComment;
+    }
+
+    @Override
+    public void setSqlEndOfComment(boolean sqlEndOfComment) {
+        this.sqlEndOfComment = sqlEndOfComment;
+    }
+    
 }

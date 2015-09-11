@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2011 Alibaba Group Holding Ltd.
+ * Copyright 1999-2101 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,17 +19,32 @@ public class SQLParser {
 
     protected final Lexer lexer;
 
-    public SQLParser(String sql){
-        this(new Lexer(sql));
+    protected String      dbType;
+
+    public SQLParser(String sql, String dbType){
+        this(new Lexer(sql), dbType);
         this.lexer.nextToken();
     }
 
+    public SQLParser(String sql){
+        this(sql, null);
+    }
+
     public SQLParser(Lexer lexer){
+        this(lexer, null);
+    }
+
+    public SQLParser(Lexer lexer, String dbType){
         this.lexer = lexer;
+        this.dbType = dbType;
     }
 
     public final Lexer getLexer() {
         return lexer;
+    }
+
+    public String getDbType() {
+        return dbType;
     }
 
     protected boolean identifierEquals(String text) {
@@ -104,6 +119,7 @@ public class SQLParser {
                     case ANALYZE:
                     case OPTIMIZE:
                     case GRANT:
+                    case REVOKE:
                     case FULL:
                     case TO:
                     case NEW:
@@ -126,6 +142,7 @@ public class SQLParser {
                     case EXCLUSIVE:
                     case MODE:
                     case ADVISE:
+                    case TYPE:
                         alias = lexer.stringVal();
                         lexer.nextToken();
                         return alias;
@@ -143,7 +160,7 @@ public class SQLParser {
                     alias += ('.' + lexer.token().name());
                     lexer.nextToken();
                 }
-                
+
                 return alias;
             }
 
@@ -169,11 +186,15 @@ public class SQLParser {
         } else if (lexer.token() == Token.USER) {
             alias = lexer.stringVal();
             lexer.nextToken();
+        } else if (lexer.token() == Token.END) {
+            alias = lexer.stringVal();
+            lexer.nextToken();
         } 
 
         switch (lexer.token()) {
             case KEY:
             case INTERVAL:
+            case CONSTRAINT:
                 alias = lexer.token().name();
                 lexer.nextToken();
                 return alias;
@@ -184,7 +205,7 @@ public class SQLParser {
         return alias;
     }
 
-    protected void printError(Token token){
+    protected void printError(Token token) {
         String arround;
         if (lexer.mark >= 0 && (lexer.text.length() > lexer.mark + 30)) {
             if (lexer.mark - 5 > 0) {
@@ -202,7 +223,7 @@ public class SQLParser {
         } else {
             arround = lexer.text;
         }
-        
+
         // throw new
         // ParserException("syntax error, error arround:'"+arround+"',expect "
         // + token + ", actual " + lexer.token() + " "
@@ -210,7 +231,7 @@ public class SQLParser {
         throw new ParserException("syntax error, error in :'" + arround + "',expect " + token + ", actual "
                                   + lexer.token() + " " + lexer.stringVal());
     }
-    
+
     public void accept(Token token) {
         if (lexer.token() == token) {
             lexer.nextToken();
@@ -223,7 +244,7 @@ public class SQLParser {
     public void match(Token token) {
         if (lexer.token() != token) {
             throw new ParserException("syntax error, expect " + token + ", actual " + lexer.token() + " "
-                                        + lexer.stringVal());
+                                      + lexer.stringVal());
         }
     }
 
